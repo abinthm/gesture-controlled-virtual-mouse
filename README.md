@@ -12,6 +12,16 @@ A computer vision-based application that allows you to control your mouse cursor
 - ⌨️ Keyboard shortcuts for mode switching
 - 🔄 Double-click support
 
+##Requirements
+
+conda create -n gesture-mouse python=3.8
+conda activate gesture-mouse
+conda install -c conda-forge opencv numpy
+pip install mediapipe pyautogui
+
+## Usage
+
+1. Run the script:
 
 2. Position your hand in front of the webcam.
 
@@ -53,9 +63,7 @@ The application window shows:
 - The webcam view is mirrored for more intuitive control
 - Position smoothing is implemented to reduce cursor jitter
 
-## Usage
 
-1. Run the script:
 ## Troubleshooting
 
 1. If the cursor movement is too sensitive:
