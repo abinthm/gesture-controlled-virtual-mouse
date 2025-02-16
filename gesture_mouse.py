@@ -31,10 +31,9 @@ double_click_interval = 0.5  # Seconds for double-click
 # State variables
 pos_history = []
 last_click_time = 0
-dragging = False
 prev_index_y = 0
 prev_index_x = 0
-mode = "move"  # Modes: move, drag, scroll
+mode = "move"  # Modes: move, scroll
 last_mode_switch_time = 0
 mode_switch_cooldown = 1  # Seconds between mode switches
 
@@ -91,7 +90,7 @@ while True:
         dist_index_thumb = get_distance(index_tip, thumb_tip, frame)
         # Right Click (middle + thumb)
         dist_middle_thumb = get_distance(middle_tip, thumb_tip, frame)
-        # Fist detection (drag)
+        # Fist detection (now used for mode switching)
         fist = is_fist(landmarks, frame)
         
         # Left Click
@@ -99,32 +98,32 @@ while True:
             if (time.time() - last_click_time) < double_click_interval:
                 pyautogui.doubleClick()
                 cv2.putText(frame, "DOUBLE CLICK", (10, 60), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             else:
                 pyautogui.click()
                 cv2.putText(frame, "LEFT CLICK", (10, 60), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             last_click_time = time.time()
 
         # Right Click
         elif dist_middle_thumb < click_threshold:
             pyautogui.rightClick()
             cv2.putText(frame, "RIGHT CLICK", (10, 90), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-        # Drag-and-Drop
-        if fist:
-            if not dragging:
-                pyautogui.mouseDown()
-                dragging = True
-            cv2.putText(frame, "DRAGGING", (10, 120), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
-        else:
-            if dragging:
-                pyautogui.mouseUp()
-                dragging = False
+        # --- Mode Switching with Fist Gesture ---
+        # Instead of using a fist for drag-and-drop (or double click),
+        # we now use it to toggle between "move" and "scroll" modes.
+        if fist and (time.time() - last_mode_switch_time) > mode_switch_cooldown:
+            if mode == "move":
+                mode = "scroll"
+            else:
+                mode = "move"
+            last_mode_switch_time = time.time()
+            cv2.putText(frame, f"MODE SWITCHED TO {mode.upper()}", (10, 120),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-        # Scroll Detection
+        # --- Scroll Detection ---
         if mode == "scroll":
             current_index_y = index_tip.y * frame.shape[0]
             current_index_x = index_tip.x * frame.shape[1]
@@ -137,26 +136,24 @@ while True:
             prev_index_y = current_index_y
             prev_index_x = current_index_x
 
-        # Gesture-Based Mode Switching
-        if (get_distance(index_tip, middle_tip, frame) < click_threshold and 
-            get_distance(middle_tip, ring_tip, frame) < click_threshold and 
-            (time.time() - last_mode_switch_time) > mode_switch_cooldown):
-            if mode == "move":
-                mode = "scroll"
-            elif mode == "scroll":
-                mode = "move"
-            last_mode_switch_time = time.time()
+        # Optional: Comment out or remove the previous gesture-based mode switching:
+        # if (get_distance(index_tip, middle_tip, frame) < click_threshold and 
+        #     get_distance(middle_tip, ring_tip, frame) < click_threshold and 
+        #     (time.time() - last_mode_switch_time) > mode_switch_cooldown):
+        #     if mode == "move":
+        #         mode = "scroll"
+        #     elif mode == "scroll":
+        #         mode = "move"
+        #     last_mode_switch_time = time.time()
 
         # Visual Feedback
         mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
         cv2.putText(frame, f"MODE: {mode.upper()}", (10, 150), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
 
     # Mode Toggle (Keyboard Controls)
     key = cv2.waitKey(1)
-    if key == ord('d'):  # Drag mode
-        mode = "drag"
-    elif key == ord('m'):  # Move mode
+    if key == ord('m'):  # Move mode
         mode = "move"
     elif key == ord('s'):  # Scroll mode
         mode = "scroll"
