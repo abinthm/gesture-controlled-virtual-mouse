@@ -12,9 +12,27 @@ A computer vision-based application that allows you to control your mouse cursor
 - ⌨️ Keyboard shortcuts for mode switching
 - 🔄 Double-click support
 
-##Requirements
 
-```bash conda create -n gesture-mouse python=3.8 ``` ```bash conda activate gesture-mouse ``` ```bash conda install -c conda-forge opencv numpy ``` ```bash pip install mediapipe pyautogui ```
+
+# Installation
+
+Run the following commands to set up your environment:
+
+```bash
+conda create -n gesture-mouse python=3.8
+```
+
+```bash
+conda activate gesture-mouse
+```
+
+```bash
+conda install -c conda-forge opencv numpy
+```
+
+```bash
+pip install mediapipe pyautogui
+```
 ## Usage
 
 1. Run the script:
